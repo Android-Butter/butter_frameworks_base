@@ -2366,6 +2366,22 @@ public final class Settings {
          */
         public static final String LOCKSCREEN_STYLE = "lockscreen_style";
 
+        /**
+         * Message to show on the lockscreen, replacing Owner info.
+         * @hide
+         */
+        public static final String LOCKSCREEN_MESSAGE = "lockscreen_message";
+
+        /**
+         * Lockscreen background
+         * ( -1 for default background )
+         * ( -2 for custom image located in /data/data/com.evervolv.toolbox/files/lock_wallpaper )
+         * ( -3 for transparent background, desktop showing)
+         * ( any other positive value for custom color )
+         * @hide
+         */
+        public static final String LOCKSCREEN_BACKGROUND = "lockscreen_background";
+
         /* END Constants for Evervolv Toolbox */
 
         /* START Constants for Theme compatibility */
@@ -2383,6 +2399,14 @@ public final class Settings {
 		public static final String THEME_COMPATIBILITY_SIGNAL = "theme_compatibility_signal";
 
 		/* END Constants for Theme compatibility */
+
+        /**
+         * toggle to "fix" the following: (found in NotificationManagerService)
+         *  new in 4.2: if there was supposed to be a sound and we're in vibrate mode,
+         *  we always vibrate, even if no vibration was specified
+         * @hide
+         */
+        public static final String NOTIFICATION_CONVERT_SOUND_TO_VIBRATION = "convert_sound_to_vibration";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings

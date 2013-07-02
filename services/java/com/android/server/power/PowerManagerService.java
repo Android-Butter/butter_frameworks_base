@@ -185,6 +185,9 @@ public final class PowerManagerService extends IPowerManager.Stub
     private DreamManagerService mDreamManager;
     private LightsService.Light mAttentionLight;
     private LightsService.Light mButtonsLight;
+    private LightsService.Light mKeyboardLight;
+    private LightsService.Light mCapsLight;
+    private LightsService.Light mFnLight;
 
     private final Object mLock = new Object();
 
@@ -370,6 +373,8 @@ public final class PowerManagerService extends IPowerManager.Stub
     private static native void nativeSetAutoSuspend(boolean enable);
     private static native void nativeCpuBoost(int duration);
 
+    private boolean mKeyboardVisible = false;
+
     public PowerManagerService() {
         synchronized (mLock) {
             mWakeLockSuspendBlocker = createSuspendBlockerLocked("PowerManagerService");
@@ -447,6 +452,9 @@ public final class PowerManagerService extends IPowerManager.Stub
             mSettingsObserver = new SettingsObserver(mHandler);
             mAttentionLight = mLightsService.getLight(LightsService.LIGHT_ID_ATTENTION);
             mButtonsLight = mLightsService.getLight(LightsService.LIGHT_ID_BUTTONS);
+            mKeyboardLight = mLightsService.getLight(LightsService.LIGHT_ID_KEYBOARD);
+            mCapsLight = mLightsService.getLight(LightsService.LIGHT_ID_CAPS);
+            mFnLight = mLightsService.getLight(LightsService.LIGHT_ID_FUNC);
 
             // Register for broadcasts from other components of the system.
             IntentFilter filter = new IntentFilter();
@@ -886,6 +894,35 @@ public final class PowerManagerService extends IPowerManager.Stub
     }
 
     @Override // Binder call
+    public void setKeyboardVisibility(boolean visible) {
+        synchronized (mLock) {
+            if (DEBUG_SPEW) {
+                Slog.d(TAG, "setKeyboardVisibility: " + visible);
+            }
+            if (mKeyboardVisible != visible) {
+                mKeyboardVisible = visible;
+                // If hiding keyboard, turn off leds
+                setKeyboardLight(false, 1);
+                setKeyboardLight(false, 2);
+            }
+        }
+    }
+
+    public void setKeyboardLight(boolean on, int key) {
+        if (key == 1) {
+            if (on)
+                mCapsLight.setColor(0x00ffffff);
+            else
+                mCapsLight.turnOff();
+        } else if (key == 2) {
+            if (on)
+                mFnLight.setColor(0x00ffffff);
+            else
+                mFnLight.turnOff();
+        }
+    }
+
+    @Override // Binder call
     public void wakeUp(long eventTime) {
         if (eventTime > SystemClock.uptimeMillis()) {
             throw new IllegalArgumentException("event time must not be in the future");
@@ -1309,8 +1346,11 @@ public final class PowerManagerService extends IPowerManager.Stub
                     if (now < nextTimeout) {
                         if (now > mLastUserActivityTime + BUTTON_ON_DURATION) {
                             mButtonsLight.setBrightness(0);
+                            mKeyboardLight.setBrightness(0);
                         } else {
                             mButtonsLight.setBrightness(mDisplayPowerRequest.screenBrightness);
+                            mKeyboardLight.setBrightness(mKeyboardVisible ?
+                                    mDisplayPowerRequest.screenBrightness : 0);
                             nextTimeout = now + BUTTON_ON_DURATION;
                         }
                         mUserActivitySummary |= USER_ACTIVITY_SCREEN_BRIGHT;
